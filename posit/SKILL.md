@@ -21,6 +21,8 @@ metadata:
     - references/connect-frameworks.md
     - references/snowflake-auth.md
     - references/r-conventions.md
+    - references/python-conventions.md
+    - references/package-management.md
     - references/orbital-patterns.md
     - references/connect-deploy.md
     - references/cortex-ai-tools.md
@@ -174,6 +176,18 @@ CALL <bridge>.POSIT_REQUEST_DEPLOY(
 
 For R-specific conventions (tidyverse, ggplot2, dbplyr), also load
 `references/r-conventions.md`.
+
+For Python-specific conventions (pandas/Snowpark, Streamlit/Shiny/Dash/FastAPI
+idioms, plotly/plotnine, requirements.txt essentials), also load
+`references/python-conventions.md`.
+
+**Always ship a lockfile for reproducible deploys.** Load
+`references/package-management.md`. Python apps get a `requirements.txt`
+(pinned via uv if available); R apps get an `renv.lock` (via
+`renv::snapshot()` before delivery). Connect installs from Posit Package
+Manager using these — never hardcode a package source URL in the app. An R
+app without renv.lock, or a Python app without requirements.txt, is not
+deployable; generate the lockfile as part of the project.
 
 ### Step 4 — Add AI features (if requested)
 

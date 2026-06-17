@@ -221,9 +221,25 @@ def deploy_to_connect(framework, app_name, app_title, file_dict, env_vars=None):
                   for fn, c in file_dict.items()},
     }
     if fw["lang"] == "python":
+        # Python: pip resolves requirements.txt. Connect installs FROM whatever
+        # repo it's configured to use (typically Posit Package Manager / PyPI
+        # mirror) — the manifest names the file, Connect supplies the source.
         manifest["python"] = {"version": _connect_python_version(),
                               "package_manager": {"name": "pip",
                                                   "package_file": "requirements.txt"}}
+    elif fw["lang"] == "r":
+        # R: if the bundle includes an renv.lock, Connect restores those exact
+        # versions (from Posit Package Manager). Pin the R version from the lock
+        # if present; otherwise let Connect choose.
+        if "renv.lock" in file_dict:
+            try:
+                lock = json.loads(file_dict["renv.lock"])
+                rver = lock.get("R", {}).get("Version")
+                manifest["r"] = {"version": rver} if rver else {}
+            except Exception:
+                manifest["r"] = {}
+        else:
+            manifest["r"] = {}
     file_dict = dict(file_dict)
     file_dict["manifest.json"] = json.dumps(manifest, indent=2)
 

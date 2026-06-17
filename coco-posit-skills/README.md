@@ -14,9 +14,13 @@ coco-posit-skills/
 │   │   ├── connect-frameworks.md      Scaffold templates for 10 frameworks
 │   │   ├── snowflake-auth.md          Credential-free connection patterns
 │   │   ├── r-conventions.md           tidyverse, ggplot2, dbplyr, Shiny, Quarto
+│   │   ├── python-conventions.md      pandas, plotnine, scikit-learn, Snowflake patterns
 │   │   ├── orbital-patterns.md        tidymodels/scikit-learn → Snowflake SQL
 │   │   ├── connect-deploy.md          rsconnect, OAuth passthrough, scheduling
-│   │   └── cortex-ai-tools.md         chatlas, querychat, Positron Assistant
+│   │   ├── cortex-ai-tools.md         chatlas, querychat, Positron Assistant
+│   │   ├── better-together.md         CoCo + Posit Assistant + Connect workflow
+│   │   ├── package-management.md      Reproducible package environments on Connect
+│   │   └── posit-packages.md          Open-source packages to reach for by task
 │   └── assets/                        Demo apps + runbook (CoCo can reference these)
 │       ├── DEMO-RUNBOOK.md            4 scripted demos with talking points
 │       ├── rbac-streamlit-app/        Zero-filtering-logic RBAC demo
