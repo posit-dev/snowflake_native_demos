@@ -25,28 +25,38 @@ def get_connection():
     account = os.environ["SNOWFLAKE_ACCOUNT"]
     warehouse = os.environ.get("SNOWFLAKE_WAREHOUSE")
 
-    # On Posit Connect: get the Snowflake token from the OAuth integration
+    # On Posit Connect: the OAuth integration injects a Snowflake token.
+    # IMPORTANT: PositAuthenticator does NOT raise when run locally — it
+    # returns an empty token. Connecting with an empty token gives
+    # "251005: User is empty". So only use the managed path when a token is
+    # actually present; otherwise fall through to local browser SSO.
     try:
         from posit.connect.external.snowflake import PositAuthenticator
-        auth = PositAuthenticator(
-            local_authenticator="EXTERNALBROWSER",  # used only in local dev
-        )
-        return snowflake.connector.connect(
-            account=account,
-            authenticator=auth.authenticator,   # "oauth" on Connect
-            token=auth.token,                    # injected by Connect
-            warehouse=warehouse,
-        )
+        auth = PositAuthenticator(local_authenticator="EXTERNALBROWSER")
+        if auth.token:                      # truthy only when deployed on Connect
+            return snowflake.connector.connect(
+                account=account,
+                authenticator=auth.authenticator,   # "oauth" on Connect
+                token=auth.token,
+                warehouse=warehouse,
+            )
     except Exception:
         pass
 
-    # Local development fallback (browser SSO)
+    # Local development fallback (running in Positron / Workbench, no deployed
+    # content context). Browser SSO needs your user to identify the session.
     return snowflake.connector.connect(
         account=account,
+        user=os.environ["SNOWFLAKE_USER"],   # e.g. FIRST.LAST@COMPANY.COM
         authenticator="externalbrowser",
         warehouse=warehouse,
     )
 ```
+
+When deployed on Connect, the managed token is present and used automatically
+(no `SNOWFLAKE_USER` needed). When running locally to iterate, set
+`SNOWFLAKE_ACCOUNT` and `SNOWFLAKE_USER` in your environment and a browser SSO
+prompt authenticates your session. Same code, both contexts.
 
 This requires `posit-sdk` in requirements.txt and a Snowflake OAuth
 integration attached to the content (Connect does this automatically in

@@ -212,18 +212,90 @@ on this in your IDE first, or deploy it straight to Connect?" Then:
 
 **If the user wants to ITERATE first → deliver code for editing.** Try in
 order:
-1. **Git** — if a git remote is configured (CLI/Desktop) or a git-backed
-   Snowsight Workspace is in use: commit + push, tell the user to pull in
-   Workbench and open in Positron. Cleanest and version-controlled.
-   - CLI/Desktop: `git add . && git commit -m "..." && git push`
-   - Snowsight: commit through the Workspace's git integration
-   - If no remote is set, ASK for the repo URL/branch once; if the user
-     doesn't have one, fall through.
+1. **Git (preferred)** — commit + push so the user pulls into Workbench and
+   opens in Positron. Version-controlled and clean.
+   - First detect a repo: is there a git remote configured (CLI/Desktop) or a
+     git-backed Snowsight Workspace?
+   - **If a repo IS detected:** commit and push.
+     - CLI/Desktop: `git add . && git commit -m "..." && git push`
+     - Snowsight: commit through the Workspace's git integration
+   - **If NO repo is detected: STOP and ASK the user before doing anything
+     else.** Do not silently fall through to a local folder. Ask:
+     "I don't see a Git repository connected. Where would you like this?
+       1. Push to a GitHub repo — give me the repo URL (and branch), and I'll
+          initialize, commit, and push. (If pushing fails on credentials,
+          I'll tell you what to set up.)
+       2. Just write the files locally so you can open them in Positron."
+     Wait for the answer. Only fall through to option 2 below if the user
+     explicitly chooses local, or says they have no repo.
+   - If the user gives a repo URL: `git init` (if needed), set the remote,
+     `git add . && git commit && git push -u origin <branch>`. If the push
+     fails on auth, tell the user to authenticate the machine (gh CLI login,
+     PAT, or SSH key) and that you'll retry — do NOT silently drop to local.
 2. **Workbench home dir** — if CoCo is running in a Workbench terminal
    (CLI inside SPCS): write the project folder straight to the home
    directory. No transfer needed; files are already where Positron sees them.
-3. **Files in chat** — last resort: output the project files so the user
-   can paste them into Positron themselves. Always works, fully manual.
+3. **Files in chat / local folder** — only after the user has declined git.
+   Output or write the project files so they can open them in Positron.
+
+**For the ITERATE path, ALWAYS include a `README.md` in the project folder**
+with the exact local-setup commands, so pulling into Workbench → running
+locally is one step. Use uv if available, venv otherwise. The README body:
+
+```
+# <App Title>
+
+Snowflake data: <DATABASE.SCHEMA.TABLE the app reads>
+
+## Run locally in Posit Workbench / Positron
+
+Using uv (fast, recommended):
+
+    uv venv
+    source .venv/bin/activate
+    uv pip install -r requirements.txt
+
+Or with the standard library venv:
+
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+
+Then run:
+
+    streamlit run app.py        # (or: shiny run app.py / python app.py)
+
+Before running locally, set two environment variables so browser SSO can
+authenticate your session:
+
+    export SNOWFLAKE_ACCOUNT=<your-account>      # e.g. ORG-ACCOUNT
+    export SNOWFLAKE_USER=<your-login>           # e.g. FIRST.LAST@COMPANY.COM
+
+The app connects to Snowflake via the Posit Connect OAuth integration when
+deployed (no user needed); locally it falls back to browser SSO using
+SNOWFLAKE_USER. No secrets file needed.
+
+## Deploy to Connect
+
+Click Publish in Positron, or: rsconnect deploy <framework> .
+```
+
+Adjust the run command and "data" line to the actual framework and table.
+The `.venv/` is for LOCAL iteration only — never commit it or include it in
+what deploys. Connect builds its own environment from `requirements.txt`.
+
+**Also include a `.gitignore`** in the project so the local environment never
+gets committed or bundled:
+
+```
+.venv/
+__pycache__/
+*.pyc
+.Rproj.user/
+.Rhistory
+rsconnect-python/
+.streamlit/secrets.toml
+```
 
 **If the user wants to DEPLOY now → use the bridge.** Try in order:
 1. **POSIT_REQUEST_DEPLOY** (the stage-deploy bridge) if it exists — works
