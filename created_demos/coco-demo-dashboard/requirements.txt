@@ -1,0 +1,6 @@
+shiny>=1.0.0
+shinywidgets>=0.3.0
+snowflake-connector-python>=3.12.0
+posit-sdk
+pandas>=2.0.0
+plotly>=5.18.0
