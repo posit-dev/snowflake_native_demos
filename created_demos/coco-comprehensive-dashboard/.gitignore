@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.Rproj.user/
+.Rhistory
+rsconnect-python/
+.streamlit/secrets.toml
